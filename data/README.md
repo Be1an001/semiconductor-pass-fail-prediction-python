@@ -33,7 +33,7 @@ The label is converted as:
 ### `secom.names`
 This file is the metadata file from UCI. It gives the dataset description and background information.
 
-I kept it here as a reference file for documentation and reproducibility.
+I kept it here as a reference file for documentation and repo context.
 
 ## Source
 
@@ -56,14 +56,14 @@ I included the raw files in this repo because:
 
 - they are public academic data
 - the files are small enough for GitHub
-- it makes the notebook easier to rerun
-- it helps keep the project reproducible
+- it keeps the notebook aligned with the actual SECOM source files used in the project
+- it makes the repo easier to review or rerun without fetching new copies first
 
 ## Public repo note
 
 For this portfolio repo, I am including the original SECOM files directly because they are public files from the UCI repository and were already used as the source in my notebook workflow.
 
-If needed, the notebook can also re-download the same files from UCI using the links above.
+If needed, the notebook can also fall back to the same UCI links above.
 
 ## Small note on feature count
 

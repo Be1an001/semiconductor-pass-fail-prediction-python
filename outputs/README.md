@@ -1,6 +1,6 @@
 # Outputs Note
 
-This folder contains selected figures from the final version of the project.
+This folder contains selected exported figures from the final version of the project.
 
 ## Figure files
 
@@ -36,4 +36,4 @@ Top 20 Random Forest feature importances from the final selected model.
 
 ## Note
 
-These are the selected public figures I want to keep in the GitHub version because they show the project story clearly without making the repo too cluttered.
+These are selected notebook-result visuals that I chose to preserve in the GitHub version. I keep them here because they show the project story clearly without making the repo too cluttered, but the current notebook is not set up to auto-export every figure into `outputs/figures`.

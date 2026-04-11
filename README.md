@@ -133,11 +133,11 @@ Because of that, I see this as a stronger analytical prototype or screening mode
    ```bash
    pip install -r requirements.txt
    ```
-3. Open the notebook:
+3. Open the main notebook:
    - `notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`
 4. Run the notebook cells in order.
 
-The notebook can use the local files in the `data/` folder. It also includes logic to download the UCI files if needed.
+This notebook is the main runnable artifact in the repo. It first checks for the SECOM files in `data/` or `../data/`, then falls back to `/content/secom_project` and can re-download the UCI files if needed.
 
 ## What This Project Shows
 
