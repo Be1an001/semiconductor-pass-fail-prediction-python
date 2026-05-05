@@ -1,147 +1,132 @@
 # Project Walkthrough
 
-## 1. Project Overview
-
-This is my Module 4 project for **EAI6010: Applications of Artificial Intelligence**.
-
-I used the **UCI SECOM dataset** to study a semiconductor pass/fail prediction problem with sensor data. The main idea of the assignment was to take an existing tutorial and revise it for a different dataset.
-
-For this project, I did not want to just swap in a new file and keep the same logic. I wanted to rebuild the workflow so it fit this dataset better and was easier to defend.
+This walkthrough explains the main analysis decisions behind the semiconductor pass/fail prediction project. It is meant to be read with the notebook, reports, data note, and output figures.
 
 See:
-- Final notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
-- Final assignment report: [`../reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf`](../reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf)
-- Portfolio PDF version: [`../reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf`](../reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf)
 
-## 2. Business Problem
+- Main notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
+- Assignment report: [`../reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf`](../reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf)
+- Portfolio PDF: [`../reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf`](../reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf)
 
-I framed this as a semiconductor quality-monitoring problem.
+## Project Overview
 
-The question is simple:
+This was an individual Module 4 project for **EAI6010: Applications of Artificial Intelligence**. I used the UCI SECOM dataset to study a semiconductor pass/fail prediction problem with sensor data.
 
-**Given sensor measurements from a manufacturing process, can I predict whether a sample is more likely to pass or fail?**
+The assignment started from the idea of adapting an off-the-shelf model. I changed the project into a tabular applied ML workflow because the SECOM data is made of numeric sensor measurements, not images.
 
-This kind of setup can be useful for:
+This project is best understood as a screening-style ML prototype. It is not a deployed manufacturing system.
+
+## Business Problem
+
+The project asks:
+
+**Given semiconductor sensor measurements, can a model help flag units that are more likely to fail?**
+
+This kind of analysis can support:
+
 - early defect screening
 - quality-risk review
-- identifying suspicious process patterns earlier
+- manual review prioritization
+- discussion of process signals that may deserve engineering follow-up
 
-At the same time, I do not treat this model as a final automated decision tool. I see it more as a prototype or screening workflow.
+The model result is not treated as an automatic pass/fail decision. In a real manufacturing setting, the threshold, sensor availability, drift risk, and false-positive/false-negative costs would need review with process or quality engineers.
 
-## 3. Why I Picked This Dataset
+## Dataset
 
-I picked the UCI SECOM dataset because I wanted a semiconductor-related problem that was closer to a real manufacturing setting.
+Main data files:
 
-The dataset also has the kind of challenges that make the project more meaningful:
-- high dimensionality
-- many missing values
-- strong class imbalance
-- timestamps that may suggest process change over time
-
-That made it a better fit for careful workflow design, not just model training.
-
-## 4. Dataset Used
-
-Main files:
 - [`../data/secom.data`](../data/secom.data)
 - [`../data/secom_labels.data`](../data/secom_labels.data)
 - [`../data/secom.names`](../data/secom.names)
 
-Main project data:
-- 1567 rows
-- 590 sensor features
-- 1463 pass samples
+Notebook-loaded data summary:
+
+- 1,567 rows
+- 590 loaded sensor features
+- 1,463 pass samples
 - 104 fail samples
+- 6.64% fail rate
+- timestamp range from July 2008 to October 2008
 
-More details:
-- [`../data/README.md`](../data/README.md)
+The raw label mapping is:
 
-## 5. What I Changed from the Original Tutorial Idea
+- `-1 -> 0` for pass
+- `1 -> 1` for fail
 
-The original inspiration was a semiconductor-related tutorial idea, but I did not directly reuse an image-based workflow.
+More detail is in [`../data/README.md`](../data/README.md).
 
-This dataset is tabular sensor data, so I changed the project in these ways:
+## Methodology
 
-- I used a tabular modeling pipeline
-- I split the data before fitting preprocessing
-- I dropped high-missing columns based on the training split only
-- I used median imputation instead of a simpler full-data shortcut
-- I removed constant features
-- I used PCA only where it made sense
-- I compared multiple models instead of trusting one model only
-- I tuned the classification threshold on the validation set
+The final notebook follows this workflow:
 
-That made the final workflow cleaner and more realistic.
+1. Load the SECOM sensor and label files.
+2. Convert the raw labels into a binary pass/fail target.
+3. Parse timestamps for exploratory analysis.
+4. Audit class balance, missing values, and low-information features.
+5. Create a stratified train/validation/test split.
+6. Fit preprocessing steps on the training data only.
+7. Drop columns with more than 50% missing values based on the training split.
+8. Apply median imputation to the remaining features.
+9. Remove constant features for the linear and neural-network path.
+10. Apply scaling and PCA for Logistic Regression and MLP.
+11. Use a simpler imputation-only path for Random Forest.
+12. Compare several classification models.
+13. Tune the classification threshold on validation balanced accuracy.
+14. Evaluate the selected model once on the holdout test set.
 
-## 6. My Workflow
+## Data Checks
 
-My final workflow was:
+Before modeling, the notebook checks:
 
-1. Load the SECOM sensor and label files
-2. Create the pass/fail target
-3. Parse timestamp fields for exploratory analysis
-4. Audit missing values, class balance, and low-information features
-5. Split into train / validation / test
-6. Fit preprocessing on training data only
-7. Build separate preprocessing paths for:
-   - linear models / MLP
-   - tree-based model
-8. Compare multiple models
-9. Tune threshold on validation balanced accuracy
-10. Evaluate the selected model once on the untouched test set
-
-## 7. Key Data Checks
-
-Before modeling, I looked at:
 - target class distribution
-- missing ratio across sensors
+- missing-value ratios across sensors
+- features with high missingness
+- constant and near-constant columns
 - timestamp-based weekly fail-rate trend
 
-This part helped me see that:
+These checks show why the dataset is difficult:
+
 - the fail class is rare
-- many features have missing values
-- some features likely carry very little signal
-- the process may not be perfectly stationary over time
+- many features contain missing values
+- some features carry very little information
+- weekly fail rates change over time, so future validation should consider time-based splits
 
 Figure:
-- ![EDA overview](../outputs/figures/eda-overview.png)
 
-## 8. Preprocessing Design
+![EDA overview](../outputs/figures/eda-overview.png)
 
-One of the biggest improvements in this project was the preprocessing logic.
+## Preprocessing Design
 
-### Main choices
-- training-only missingness filter
-- median imputation
-- constant-feature removal
-- scaling for linear / neural-network path
-- PCA for linear / neural-network path
-- simpler imputation-only path for Random Forest
+The preprocessing design was one of the most important parts of this project.
 
-### Why this mattered
-I wanted the workflow to be easier to explain and less vulnerable to leakage.
+Main choices:
 
-A simple shortcut may look fine in a classroom setting, but it becomes harder to defend when the dataset is small, imbalanced, and noisy.
+- split the data before fitting preprocessing
+- use training-only missingness filtering
+- use median imputation
+- remove constant features for the linear and MLP paths
+- use scaling and PCA for Logistic Regression and MLP
+- keep Random Forest on an imputation-only tree path
 
-## 9. Models Compared
+This design helps reduce preprocessing leakage. It does not remove all validation risk, because the project still uses a stratified random split rather than a time-based validation setup.
 
-I compared four models:
+## Models Compared
 
-### 1. Dummy Classifier
-This was my sanity-check baseline.
+The notebook compares four models:
 
-### 2. Logistic Regression + PCA
-This was my simple and more interpretable baseline.
+| Model | Role in the project |
+|---|---|
+| Dummy Classifier | Majority-class sanity baseline |
+| Logistic Regression + PCA | Simple class-weighted linear baseline |
+| Random Forest | Nonlinear tree-based reference model |
+| Weighted MLP | PyTorch neural-network comparison model |
 
-### 3. Random Forest
-This was my stronger nonlinear baseline.
+The MLP was included partly to stay aligned with the AI course, but the project is not mainly a deep learning project. The final selected model was Random Forest.
 
-### 4. Weighted MLP
-I also built a class-weighted PyTorch MLP to stay aligned with the AI course.
+## Selected Code Examples
 
-## 10. Selected Code
+### Data loading and label mapping
 
-### Data loading
 ```python
 X_raw = pd.read_csv(data_file, sep=r"\s+", header=None, engine="python")
 X_raw.columns = [f"sensor_{i:03d}" for i in range(1, X_raw.shape[1] + 1)]
@@ -153,6 +138,7 @@ y = labels_df["label"].replace({-1: 0, 1: 1}).astype(int)
 ```
 
 ### Training-only missingness filter
+
 ```python
 def select_feature_columns_by_missingness(X_train_df, missing_threshold=0.50):
     train_missing_ratio = X_train_df.isna().mean()
@@ -162,6 +148,7 @@ def select_feature_columns_by_missingness(X_train_df, missing_threshold=0.50):
 ```
 
 ### Random Forest model
+
 ```python
 rf_model = RandomForestClassifier(
     n_estimators=400,
@@ -172,81 +159,102 @@ rf_model = RandomForestClassifier(
 )
 ```
 
-## 11. Validation Results
+## Validation Model Comparison
 
-On the validation split:
+The validation comparison used balanced accuracy as the main selection metric because the target is highly imbalanced.
 
-- **Random Forest** had the best balanced accuracy
-- **Logistic Regression + PCA** stayed competitive on some other metrics
-- **Weighted MLP** pushed recall high, but with very low precision and much lower overall accuracy
+| Model | Threshold | Accuracy | Balanced accuracy | Precision | Recall | PR-AUC |
+|---|---:|---:|---:|---:|---:|---:|
+| Random Forest | 0.110 | 0.7102 | 0.6458 | 0.1277 | 0.5714 | 0.1329 |
+| Weighted MLP | 0.125 | 0.3535 | 0.6315 | 0.0901 | 0.9524 | 0.1253 |
+| Logistic Regression + PCA | 0.305 | 0.8280 | 0.6205 | 0.1633 | 0.3810 | 0.1509 |
+| Dummy Classifier | 0.500 | 0.9331 | 0.5000 | 0.0000 | 0.0000 | 0.0669 |
 
-That was actually one of the useful findings from this project:
-
-**A neural network is not automatically the best choice for a small, imbalanced tabular problem.**
+Random Forest had the strongest validation balanced accuracy on this split. The MLP reached high recall, but with very low precision and lower overall accuracy. Logistic Regression + PCA remained a useful simpler baseline.
 
 Figure:
-- ![MLP training history](../outputs/figures/mlp-training-history.png)
 
-## 12. Final Model Selection
+![MLP training history](../outputs/figures/mlp-training-history.png)
 
-I selected **Random Forest** for final test evaluation because it had the strongest validation balanced accuracy.
+## Final Holdout Evaluation
 
-I treated that as a split-specific decision, not as proof that it would always win on every future resample.
+Random Forest was selected for the holdout test evaluation because it had the strongest validation balanced accuracy.
 
-## 13. Final Test Results
+This selection should be read as split-specific. It does not prove that Random Forest would always be the best model across future samples or time periods.
 
-### Random Forest test metrics
-- Accuracy: 0.7898
-- Balanced accuracy: 0.6663
-- Recall: 0.5238
-- ROC-AUC: 0.7978
-- PR-AUC: 0.2192
+Final Random Forest test metrics:
 
-### Confusion matrix read
-The model correctly detected **11 of the 21 fail cases** on the test set, but it also produced many false positives.
+| Metric | Value |
+|---|---:|
+| Threshold | 0.110 |
+| Accuracy | 0.7898 |
+| Balanced accuracy | 0.6663 |
+| Specificity | 0.8089 |
+| Precision | 0.1642 |
+| Recall | 0.5238 |
+| F1 | 0.2500 |
+| ROC-AUC | 0.7978 |
+| PR-AUC | 0.2192 |
+
+Final test confusion matrix:
+
+|  | Predicted pass | Predicted fail |
+|---|---:|---:|
+| True pass | 237 | 56 |
+| True fail | 10 | 11 |
+
+The model detected 11 of the 21 fail cases in the test set. It also incorrectly flagged 56 pass cases as fail. This is why the result is better described as a screening signal than as an automated decision system.
 
 Figures:
-- ![Confusion matrix](../outputs/figures/test-confusion-matrix-random-forest.png)
-- ![ROC curve](../outputs/figures/roc-curve-random-forest.png)
-- ![Precision-recall curve](../outputs/figures/precision-recall-curve-random-forest.png)
 
-## 14. Feature Importance
+![Confusion matrix](../outputs/figures/test-confusion-matrix-random-forest.png)
 
-I also reviewed the top Random Forest feature importances.
+![ROC curve](../outputs/figures/roc-curve-random-forest.png)
 
-I used this only as a model interpretation step, not as proof of physical causality. In a real semiconductor setting, these signals would still need process knowledge and engineering validation.
+![Precision-recall curve](../outputs/figures/precision-recall-curve-random-forest.png)
+
+## Feature Importance
+
+The notebook reviews Random Forest feature importances as a model interpretation step.
+
+The most important caution is that these are anonymous sensor variables. The chart can suggest which model inputs were influential, but it does not prove physical root causes in the semiconductor process.
 
 Figure:
-- ![Random Forest feature importances](../outputs/figures/random-forest-feature-importances.png)
 
-## 15. What I Learned
+![Random Forest feature importances](../outputs/figures/random-forest-feature-importances.png)
 
-This project helped me practice a more realistic analyst mindset.
+## Limitations
 
-I learned that:
-- a cleaner workflow matters more than flashy results
-- imbalanced classification needs better metrics than plain accuracy
-- threshold choice changes the real operating behavior of a model
-- tabular industrial data can punish overly simple modeling choices
-- strong deployment thinking includes limits, monitoring, and retraining questions
+This project is not a production-ready manufacturing model.
 
-## 16. Final Conclusion
+Main limitations:
 
-This project is a stronger analytical prototype, but not a production-ready manufacturing model yet.
+- only 104 fail cases are available in the full dataset
+- the validation and test splits each contain only 21 fail cases
+- model selection is based on one validation split
+- the workflow uses a stratified random split, not a time-based validation split
+- the final threshold is not based on real business or engineering costs
+- feature importance does not prove root causes
+- no calibration, deployment, monitoring, dashboard, SQL layer, GenAI component, or MLOps workflow is included
+- no real fab stakeholder validation or cost savings are confirmed
 
-I would still want:
-- repeated validation or cross-validation
-- time-based validation
-- drift monitoring
-- threshold setting with engineering or business cost in mind
-- more validation of the most important sensor signals
+## Future Improvements
 
-Overall, I think this is a good example of taking an off-the-shelf modeling idea and turning it into a more careful and more honest workflow.
+Good next steps would be:
 
-## 17. Related Files
+- repeated stratified cross-validation
+- time-based validation using the timestamp fields
+- cost-based threshold testing for false positives and false negatives
+- probability calibration checks
+- clearer documentation of feature anonymity and operational sensor availability
+- permutation importance or SHAP with careful non-causal interpretation
+- a simple read-only review app for threshold trade-offs, if this project were extended as a portfolio data product
 
-- Notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
+## Related Files
+
+- Main notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
 - Assignment report: [`../reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf`](../reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf)
 - Portfolio PDF: [`../reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf`](../reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf)
 - Data note: [`../data/README.md`](../data/README.md)
-- Figures note: [`../outputs/README.md`](../outputs/README.md)
+- Output figure note: [`../outputs/README.md`](../outputs/README.md)
+- Root README: [`../README.md`](../README.md)

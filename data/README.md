@@ -1,72 +1,73 @@
 # Data Note
 
-This folder contains the public dataset files used in this project.
+This folder contains the public UCI SECOM dataset files used in the notebook.
 
 ## Files
 
-- `secom.data`
-- `secom_labels.data`
-- `secom.names`
+| File | Purpose |
+|---|---|
+| `secom.data` | Main sensor feature matrix used for modeling |
+| `secom_labels.data` | Pass/fail labels and timestamp fields |
+| `secom.names` | UCI metadata and dataset background |
 
-## What each file is for
+## Dataset Source
+
+These files come from the **UCI Machine Learning Repository - SECOM dataset**.
+
+Direct source links:
+
+- `secom.data`: https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom.data
+- `secom_labels.data`: https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom_labels.data
+- `secom.names`: https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom.names
+
+## How the Notebook Uses the Files
 
 ### `secom.data`
-This is the main sensor dataset used for modeling.
 
-In the notebook, it is loaded as the feature matrix and the columns are renamed to:
+The notebook loads this file as the feature matrix and renames the columns as:
+
 - `sensor_001`
 - `sensor_002`
 - ...
 - `sensor_590`
 
-### `secom_labels.data`
-This file contains the target label and timestamp-related fields.
+The sensor variables are anonymous, so they should be treated as model input features rather than named process measurements.
 
-In the notebook, it is used to create:
-- the pass/fail target
+### `secom_labels.data`
+
+The notebook loads this file to create:
+
+- the binary pass/fail target
 - timestamp-based exploratory checks
 
 The label is converted as:
+
 - `-1 -> 0` for pass
 - `1 -> 1` for fail
 
 ### `secom.names`
-This file is the metadata file from UCI. It gives the dataset description and background information.
 
-I kept it here as a reference file for documentation and repo context.
+This file is kept as the UCI metadata reference. It describes the semiconductor manufacturing setting, the public dataset source, missing values, and the original SECOM task background.
 
-## Source
+## Project Data Summary
 
-These files come from the **UCI Machine Learning Repository - SECOM dataset**.
+Based on the final notebook:
 
-Direct download links:
+- **Rows:** 1,567
+- **Loaded sensor features:** 590
+- **Pass samples:** 1,463
+- **Fail samples:** 104
+- **Fail rate:** 6.64%
+- **Timestamp range:** July 2008 to October 2008
 
-- `secom.data`  
-  https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom.data
+The UCI metadata may describe the dataset at a slightly different attribute-count level. For this project, the README follows the actual notebook-loaded structure: 590 sensor columns from `secom.data`, with labels and timestamps read from `secom_labels.data`.
 
-- `secom_labels.data`  
-  https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom_labels.data
+## Public Repository Note
 
-- `secom.names`  
-  https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom.names
+The raw SECOM files are included here because they are public academic dataset files and small enough for this repository. Keeping them in the repo makes the notebook easier to review and rerun without downloading the source files again.
 
-## Why I included the raw files
+The notebook still includes fallback download logic for the same UCI files if a complete local data folder is not available.
 
-I included the raw files in this repo because:
+## Caution
 
-- they are public academic data
-- the files are small enough for GitHub
-- it keeps the notebook aligned with the actual SECOM source files used in the project
-- it makes the repo easier to review or rerun without fetching new copies first
-
-## Public repo note
-
-For this portfolio repo, I am including the original SECOM files directly because they are public files from the UCI repository and were already used as the source in my notebook workflow.
-
-If needed, the notebook can also fall back to the same UCI links above.
-
-## Small note on feature count
-
-In my notebook, `secom.data` is loaded as **590 sensor columns**.
-
-The UCI metadata file may describe the dataset slightly differently at the documentation level, so I follow the actual notebook-loaded file structure here because that is what the project code uses.
+The dataset uses anonymous sensor variables. Feature importance results in this project should be read as model-important inputs, not as confirmed physical root causes of semiconductor failure.
