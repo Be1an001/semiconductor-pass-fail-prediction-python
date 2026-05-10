@@ -1,0 +1,2 @@
+selected_experiment_name,model_type,threshold_source,selection_metric,threshold,accuracy,balanced_accuracy,specificity,precision,recall,f1,f2,roc_auc,pr_auc,tn,fp,fn,tp,review_count,review_rate
+rf_current_config_threshold_tuned,random_forest,validation_f2,f2,0.11,0.7898089171974523,0.6663416219730214,0.8088737201365188,0.16417910447761194,0.5238095238095238,0.25,0.36423841059602646,0.7978222005525759,0.219166059390297,237,56,10,11,67,0.21337579617834396

@@ -23,9 +23,25 @@ preprocessing:
   tree_path:
     use_pca: false
 
+selection:
+  validation_metrics_path: outputs/metrics/validation_metrics.csv
+  source_experiments_config: configs/rf_experiments.yaml
+  selected_experiment_name: null
+  candidate_model_type: random_forest
+  require_validation_threshold: true
+  primary_metric: f2
+  tie_breakers:
+    - metric: review_rate
+      direction: asc
+    - metric: balanced_accuracy
+      direction: desc
+    - metric: pr_auc
+      direction: desc
+  threshold_column: threshold
+
 final_model:
   name: random_forest
-  source_run_name: rf_current_config_threshold_tuned
+  selected_from: validation_metrics
   params:
     n_estimators: 400
     min_samples_leaf: 3
@@ -35,7 +51,7 @@ final_model:
 
 threshold:
   source: validation
-  selection_metric: balanced_accuracy
+  selection_metric: f2
   selected_threshold: null
   notebook_reference_threshold: 0.110
   never_tune_on: test
@@ -44,14 +60,16 @@ outputs:
   metrics_dir: outputs/metrics
   figures_dir: outputs/figures
   final_test_metrics: outputs/metrics/final_test_metrics.csv
-  confusion_matrix: outputs/figures/confusion_matrix.png
-  roc_curve: outputs/figures/roc_curve.png
-  pr_curve: outputs/figures/pr_curve.png
-  feature_importance: outputs/figures/feature_importance.png
+  final_feature_importance: outputs/metrics/final_feature_importance.csv
+  confusion_matrix: outputs/figures/final_confusion_matrix.png
+  roc_curve: outputs/figures/final_roc_curve.png
+  pr_curve: outputs/figures/final_pr_curve.png
+  feature_importance: outputs/figures/final_feature_importance.png
   model_card: reports/model_card.md
   experiment_summary: reports/experiment_summary.md
 
 mlflow:
-  enabled: false
+  enabled: true
   tracking_uri: sqlite:///mlflow.db
-  experiment_name: secom-rf-screening
+  experiment_name: secom-pass-fail-screening
+  run_name: final_holdout_evaluation
