@@ -1,0 +1,109 @@
+project:
+  name: secom-pass-fail-mlops-lite
+  description: Reproducible Random Forest experiments for SECOM fail screening.
+
+random_seed: 42
+
+data:
+  feature_path: data/secom.data
+  labels_path: data/secom_labels.data
+  names_path: data/secom.names
+  label_mapping:
+    pass_raw: -1
+    fail_raw: 1
+    pass_binary: 0
+    fail_binary: 1
+
+split:
+  test_size: 0.20
+  validation_size: 0.20
+  stratify: true
+  random_state: 42
+  selection_split: validation
+  final_evaluation_split: test
+
+preprocessing:
+  missingness_threshold: 0.50
+  imputation_strategy: median
+  tree_path:
+    use_pca: false
+  linear_path:
+    use_variance_filter: true
+    use_scaling: true
+    pca_variance: 0.95
+
+threshold_search:
+  min_threshold: 0.05
+  max_threshold: 0.95
+  num_thresholds: 181
+  selection_metric: balanced_accuracy
+  supported_metrics:
+    - balanced_accuracy
+    - f2
+  tune_on: validation
+  never_tune_on: test
+
+experiments:
+  - name: dummy_majority_baseline
+    model_type: dummy_classifier
+    threshold: 0.50
+  - name: logistic_regression_pca_baseline
+    model_type: logistic_regression_pca
+    threshold_selection: validation_balanced_accuracy
+  - name: rf_default_threshold_050
+    model_type: random_forest
+    params:
+      n_estimators: 100
+      class_weight: null
+      random_state: 42
+    threshold: 0.50
+  - name: rf_balanced_threshold_050
+    model_type: random_forest
+    params:
+      n_estimators: 400
+      min_samples_leaf: 3
+      class_weight: balanced_subsample
+      random_state: 42
+    threshold: 0.50
+  - name: rf_current_config_threshold_050
+    model_type: random_forest
+    params:
+      n_estimators: 400
+      min_samples_leaf: 3
+      class_weight: balanced_subsample
+      random_state: 42
+    threshold: 0.50
+  - name: rf_current_config_threshold_tuned
+    model_type: random_forest
+    params:
+      n_estimators: 400
+      min_samples_leaf: 3
+      class_weight: balanced_subsample
+      random_state: 42
+    threshold_selection: validation_balanced_accuracy
+  - name: rf_random_search_best_threshold_050
+    model_type: random_forest
+    search: random_search
+    threshold: 0.50
+  - name: rf_random_search_best_threshold_tuned
+    model_type: random_forest
+    search: random_search
+    threshold_selection: validation_balanced_accuracy
+
+outputs:
+  metrics_dir: outputs/metrics
+  figures_dir: outputs/figures
+  validation_metrics: outputs/metrics/validation_metrics.csv
+  threshold_sweep: outputs/metrics/threshold_sweep.csv
+  rf_improvement_table: outputs/metrics/rf_improvement_table.csv
+  final_test_metrics: outputs/metrics/final_test_metrics.csv
+  confusion_matrix: outputs/figures/confusion_matrix.png
+  roc_curve: outputs/figures/roc_curve.png
+  pr_curve: outputs/figures/pr_curve.png
+  feature_importance: outputs/figures/feature_importance.png
+
+mlflow:
+  enabled: false
+  tracking_uri: sqlite:///mlflow.db
+  experiment_name: secom-rf-screening
+  artifact_location: mlartifacts
