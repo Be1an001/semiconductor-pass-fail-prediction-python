@@ -1,232 +1,267 @@
 # Semiconductor Pass/Fail Prediction with the UCI SECOM Dataset
 
-This project analyzes semiconductor pass/fail prediction using the public UCI SECOM sensor dataset. It was completed as an individual course-based project for **EAI6010: Applications of Artificial Intelligence** and later organized as a portfolio notebook.
+This project applies a reproducible machine learning workflow to the UCI SECOM semiconductor pass/fail dataset, focusing on imbalanced classification, Random Forest tuning, threshold selection, experiment tracking, and model interpretation.
 
-The goal was to build a careful Python/Jupyter workflow for an imbalanced manufacturing-style classification problem. The project compares several models, tunes the final decision threshold on the validation set, and interprets the result as a screening prototype rather than a production quality-control system.
+The project is best read as a master's-level applied machine learning portfolio workflow. It is a screening prototype for a public, anonymous dataset, not an operational semiconductor quality-control system.
 
-## Project Type / Status / Tools
+## Project Overview
 
-- **Project type:** Applied machine learning / manufacturing analytics
-- **Status:** Individual course project and portfolio notebook
-- **Main artifact:** Jupyter Notebook
-- **Dataset:** UCI SECOM semiconductor manufacturing sensor data
-- **Main tools:** Python, pandas, numpy, scikit-learn, matplotlib, seaborn, PyTorch
-- **Final reference model:** Random Forest selected on validation balanced accuracy
-- **Production status:** Not deployed and not production-ready
+The main question is:
+
+**Can sensor measurements help flag units that are more likely to fail downstream testing?**
+
+The project started as a notebook-first analysis and now also includes a script-based workflow. The current version keeps the original notebook, but adds reusable Python modules, configuration files, MLflow tracking, generated metrics, final holdout evaluation, and portfolio-ready reports.
+
+The main story is not raw accuracy. The dataset is highly imbalanced, so the more useful story is the fail-class screening trade-off: recall, F2-score, balanced accuracy, PR-AUC, confusion matrix counts, and review workload.
 
 ## Business Problem
 
-Semiconductor manufacturing processes generate many sensor and process measurements. A practical analytics question is whether those measurements can help flag units that are more likely to fail downstream testing.
+Semiconductor manufacturing can produce many sensor and process measurements. A useful analytics task is to identify units that may deserve extra review before final downstream testing.
 
-In this project, the model is treated as a possible early screening aid. It is not presented as a final automated pass/fail decision system. A real manufacturing use case would still need engineering validation, cost-based threshold setting, time-based testing, and monitoring before deployment.
-
-## Project Objective
-
-The objective was to adapt an off-the-shelf AI modeling idea into a more realistic tabular machine learning workflow for the SECOM dataset.
-
-The analysis focused on:
-
-- auditing missing values and class imbalance
-- avoiding preprocessing leakage
-- comparing simple and nonlinear models
-- tuning the classification threshold on validation data
-- evaluating the selected model once on the holdout test set
-- explaining the screening trade-off honestly
+In this project, the model is treated as human review support. A lower threshold can catch more fail cases, but it also creates more false positives and a higher review rate. That threshold trade-off is the main modeling decision.
 
 ## Dataset
 
-This repository includes the public UCI SECOM files used by the notebook.
+This repository includes the public UCI SECOM files used by the workflow.
 
 | File | Purpose |
 |---|---|
-| `data/secom.data` | Sensor feature matrix used for modeling |
-| `data/secom_labels.data` | Raw pass/fail labels and timestamp fields |
-| `data/secom.names` | UCI metadata and dataset background |
+| `data/secom.data` | Sensor feature matrix |
+| `data/secom_labels.data` | Raw labels and timestamps |
+| `data/secom.names` | UCI metadata |
 
-Notebook-loaded dataset summary:
+Dataset summary used by this project:
 
-- **Rows:** 1,567
-- **Loaded sensor features:** 590
-- **Pass samples:** 1,463
-- **Fail samples:** 104
-- **Fail rate:** 6.64%
-- **Timestamp range:** July 2008 to October 2008
-- **Features with at least one missing value:** 538
-- **Features above 50% missing in the full audit:** 28
+- Rows: 1,567
+- Loaded sensor features: 590
+- Pass samples: 1,463
+- Fail samples: 104
+- Fail rate: 6.64%
+- Label mapping: `-1 -> 0` for pass, `1 -> 1` for fail
 
-The label is converted in the notebook as:
+The UCI metadata describes 591 attributes. This project loads 590 sensor columns from `secom.data` and reads labels and timestamps separately from `secom_labels.data`.
 
-- `-1 -> 0` for pass
-- `1 -> 1` for fail
+## Why Accuracy Is Misleading
 
-The UCI metadata describes 591 attributes, while this project loads 590 sensor columns from `secom.data` and reads labels/timestamps from `secom_labels.data`. More detail is in [`data/README.md`](data/README.md).
+Only about 6.6% of samples are fail cases. A model can look good by raw accuracy while missing the fail class.
 
-## My Role / Contribution
+For example, on the validation split, the current Random Forest configuration at threshold `0.50` missed every fail case:
 
-This was an individual course-based project. I selected the SECOM dataset, rebuilt the workflow around tabular sensor data, ran the analysis, compared the models, interpreted the results, and prepared the notebook/report materials.
+| Experiment | Threshold | Recall | F2 | Balanced accuracy | TP | FP | FN | TN | Review rate |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `rf_current_config_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0 | 0 | 21 | 293 | 0.0000 |
+| `rf_current_config_threshold_tuned` | 0.110 | 0.5714 | 0.3371 | 0.6458 | 12 | 82 | 9 | 211 | 0.2994 |
 
-## Methodology
+The tuned threshold changed the operating point. It caught more fail cases, but it also sent more samples to review. That is the trade-off this project documents.
 
-The final workflow was:
+## Workflow
 
-1. Load SECOM sensor data, labels, and metadata.
-2. Convert raw labels into a binary pass/fail target.
-3. Parse timestamps for exploratory analysis.
-4. Audit class balance, missing values, low-information features, and time patterns.
-5. Create a stratified train/validation/test split.
-6. Fit preprocessing steps on the training data only.
-7. Drop high-missing columns using the training split only.
-8. Apply median imputation.
-9. Remove constant features for the linear/neural-network path.
-10. Apply scaling and PCA for Logistic Regression and MLP paths.
-11. Use an imputation-only feature path for the Random Forest.
-12. Compare Dummy Classifier, Logistic Regression + PCA, Random Forest, and a class-weighted PyTorch MLP.
-13. Tune thresholds on validation balanced accuracy.
-14. Evaluate the selected model once on the holdout test set.
+The current workflow has two layers:
 
-## Key Findings
+1. The original notebook remains available as the course/portfolio baseline.
+2. The script-based workflow runs reproducible experiments and produces metrics, figures, and reports.
 
-- The dataset is highly imbalanced, with only 104 fail cases out of 1,567 rows.
-- Missing values are spread across many sensor columns, so missingness handling is an important part of the workflow.
-- Random Forest had the strongest validation balanced accuracy among the compared models.
-- Logistic Regression + PCA remained useful as a simpler baseline.
-- The class-weighted MLP achieved high validation recall but with very low precision and much lower overall accuracy.
-- The final Random Forest threshold was **0.110**, which shows why threshold tuning matters for this imbalanced problem.
-- On the holdout test set, the Random Forest detected **11 of 21 fail cases**, but it also produced many false positives.
-- The result suggests a possible screening signal, not a production-ready quality decision system.
+Script workflow:
 
-## Model Evaluation Note
+1. Load SECOM data from `data/`.
+2. Map labels to pass/fail target values.
+3. Create a stratified train/validation/test split.
+4. Fit preprocessing on training data only.
+5. Run validation-only baseline and Random Forest experiments.
+6. Select thresholds using validation probabilities only.
+7. Track runs with local MLflow.
+8. Evaluate the selected final model once on the holdout test set.
+9. Export reports from generated CSV outputs.
 
-The Random Forest was selected based on validation balanced accuracy. This should be treated as a split-specific result, not proof that Random Forest would always be the best model on future data.
-
-Final holdout test metrics for the selected Random Forest:
-
-| Metric | Value |
-|---|---:|
-| Threshold | 0.110 |
-| Accuracy | 0.7898 |
-| Balanced accuracy | 0.6663 |
-| Specificity | 0.8089 |
-| Precision | 0.1642 |
-| Recall | 0.5238 |
-| F1 | 0.2500 |
-| ROC-AUC | 0.7978 |
-| PR-AUC | 0.2192 |
-
-Final test confusion matrix:
-
-|  | Predicted pass | Predicted fail |
-|---|---:|---:|
-| True pass | 237 | 56 |
-| True fail | 10 | 11 |
-
-The confusion matrix is the most useful way to read the result. The model caught some fail cases, but the number of false positives means it would need business and engineering review before any real operating use.
-
-## Visual Highlights
-
-### EDA overview
-
-This figure shows the target imbalance, missing-value pattern, and weekly fail-rate trend.
-
-![EDA overview](outputs/figures/eda-overview.png)
-
-### Random Forest confusion matrix
-
-This figure shows the main screening trade-off on the holdout test set.
-
-![Random Forest confusion matrix](outputs/figures/test-confusion-matrix-random-forest.png)
-
-### ROC and precision-recall curves
-
-The ROC curve and PR curve should be read together because the fail class is small.
-
-![ROC curve](outputs/figures/roc-curve-random-forest.png)
-
-![Precision-recall curve](outputs/figures/precision-recall-curve-random-forest.png)
-
-### Random Forest feature importances
-
-This chart shows model-important sensor variables for the selected Random Forest. These should not be treated as confirmed physical root causes.
-
-![Random Forest feature importances](outputs/figures/random-forest-feature-importances.png)
-
-### MLP training history
-
-The MLP training history is included because the neural network was one of the comparison models, although it was not the final selected model.
-
-![MLP training history](outputs/figures/mlp-training-history.png)
+The test set is not used for model selection, threshold selection, or hyperparameter tuning.
 
 ## Repository Structure
 
 | Path | Description |
 |---|---|
-| `notebooks/` | Main Jupyter Notebook workflow |
-| `data/` | Public SECOM dataset files and data note |
-| `outputs/figures/` | Selected exported figures from the final notebook |
-| `reports/` | Assignment report and shorter portfolio PDF |
-| `walkthrough/` | Markdown walkthrough of the project workflow |
-| `requirements.txt` | Python package list |
+| `data/` | Public SECOM data files and dataset note |
+| `notebooks/` | Original notebook workflow |
+| `src/secom_ml/` | Reusable data, split, preprocessing, model, metric, threshold, plot, and tracking helpers |
+| `scripts/` | Command-line scripts for experiments, final evaluation, and report export |
+| `configs/` | YAML configuration files for experiments and final evaluation |
+| `outputs/metrics/` | Generated CSV metrics from the latest local script run |
+| `outputs/figures/` | Notebook figures and final script-generated figures |
+| `reports/` | PDF reports plus generated experiment summary and model card |
+| `walkthrough/` | Project walkthrough |
+| `tests/` | Lightweight tests for data loading, metrics, and threshold selection |
 
-## Reproducibility Notes
+## Experiment Design
 
-This repository includes the raw SECOM files and a runnable notebook, so the analysis can be reviewed locally.
+The script-based workflow uses the same split idea as the notebook:
 
-Basic review steps:
+- 60% train
+- 20% validation
+- 20% holdout test
+- stratified by target label
+- random seed `42`
 
-1. Install the listed packages:
+Preprocessing is fit on training data only:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+- drop high-missing columns using the training split
+- median imputation
+- tree-model path without scaling or PCA
+- linear baseline path with imputation, variance filtering, scaling, and PCA
 
-2. Open the main notebook:
+Threshold sweeps use validation probabilities from `0.05` to `0.95`. Tuned thresholds are selected by F2-score, with ties resolved toward lower review rate.
 
-   ```text
-   notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb
-   ```
+## Random Forest Iterative Results
 
-3. Run the notebook cells in order.
+The table below comes from `outputs/metrics/rf_improvement_table.csv`.
 
-Important notes:
+| Experiment | Threshold | Recall | F2 | Balanced accuracy | PR-AUC | TP | FP | FN | TN | Review rate |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `rf_default_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0.1417 | 0 | 0 | 21 | 293 | 0.0000 |
+| `rf_balanced_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0.1329 | 0 | 0 | 21 | 293 | 0.0000 |
+| `rf_current_config_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0.1329 | 0 | 0 | 21 | 293 | 0.0000 |
+| `rf_current_config_threshold_tuned` | 0.110 | 0.5714 | 0.3371 | 0.6458 | 0.1329 | 12 | 82 | 9 | 211 | 0.2994 |
+| `rf_random_search_best_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.4983 | 0.1446 | 0 | 1 | 21 | 292 | 0.0032 |
+| `rf_random_search_best_threshold_tuned` | 0.130 | 0.5714 | 0.3297 | 0.6390 | 0.1446 | 12 | 86 | 9 | 207 | 0.3121 |
 
-- The workflow is notebook-based.
-- Package versions are not pinned in `requirements.txt`.
-- The notebook can use local data from `data/` or `../data/`; it also contains a fallback download path for the UCI files.
-- The selected figures in `outputs/figures/` are curated outputs for the repository. The current notebook is not set up as an automated figure-export pipeline.
-- No automated tests, model registry, deployment script, or monitoring pipeline are included.
+In this run, threshold tuning had a larger practical effect than the small RandomizedSearchCV result. The final selected validation candidate was `rf_current_config_threshold_tuned`.
+
+## Final Holdout Test Result
+
+The selected validation candidate was evaluated once on the untouched holdout test set.
+
+Source file: `outputs/metrics/final_test_metrics.csv`
+
+| Metric | Value |
+|---|---:|
+| Selected experiment | `rf_current_config_threshold_tuned` |
+| Threshold | 0.110 |
+| Recall | 0.5238 |
+| F2 | 0.3642 |
+| Balanced accuracy | 0.6663 |
+| PR-AUC | 0.2192 |
+| ROC-AUC | 0.7978 |
+| TP | 11 |
+| FP | 56 |
+| FN | 10 |
+| TN | 237 |
+| Review rate | 0.2134 |
+
+The final model detected 11 of 21 fail cases in the holdout test split. It also flagged 56 pass cases for review. This is useful as a screening prototype, but it is not an automated accept/reject decision rule.
+
+## MLflow Experiment Tracking
+
+The experiment scripts use local MLflow tracking.
+
+- Tracking URI: `sqlite:///mlflow.db`
+- Experiment name: `secom-pass-fail-screening`
+- One run is logged for each validation experiment.
+- A separate run is logged for final holdout evaluation.
+
+Local MLflow files such as `mlflow.db`, `mlruns/`, and `mlartifacts/` are ignored by Git.
+
+To open the local MLflow UI after running experiments:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+## Key Artifacts
+
+Generated metrics:
+
+- `outputs/metrics/validation_metrics.csv`
+- `outputs/metrics/threshold_sweep.csv`
+- `outputs/metrics/rf_improvement_table.csv`
+- `outputs/metrics/final_test_metrics.csv`
+- `outputs/metrics/final_feature_importance.csv`
+
+Generated figures:
+
+- `outputs/figures/final_confusion_matrix.png`
+- `outputs/figures/final_roc_curve.png`
+- `outputs/figures/final_pr_curve.png`
+- `outputs/figures/final_feature_importance.png`
+
+Reports:
+
+- `reports/experiment_summary.md`
+- `reports/model_card.md`
+
+Original project materials:
+
+- `notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`
+- `reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf`
+- `reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf`
+
+## How to Run Locally
+
+Install requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run tests and linting:
+
+```bash
+python -m pytest
+python -m ruff check .
+```
+
+Run validation experiments:
+
+```bash
+python scripts/run_rf_experiments.py --config configs/rf_experiments.yaml
+```
+
+Run final holdout evaluation:
+
+```bash
+python scripts/evaluate_final_model.py --config configs/final_rf.yaml
+```
+
+Export the Markdown reports:
+
+```bash
+python scripts/export_experiment_summary.py
+```
+
+Open MLflow locally:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db
+```
+
+The CSV outputs are overwritten by the latest local run. The project does not create timestamped metrics files.
 
 ## Limitations
 
-This project should be interpreted as an analytical prototype, not a production semiconductor quality system.
+- The fail class is small, with only 104 fail cases overall.
+- The validation and test splits each contain 21 fail cases.
+- Results are based on one stratified random split.
+- A time-based validation split is not yet included.
+- Threshold selection uses validation metrics, not a real engineering cost function.
+- Feature importance values are model-driven signals, not process explanations.
+- The dataset is public and anonymous, so operational sensor meaning is limited.
+- No fab stakeholder validation, operational rollout, monitoring system, or cost savings are claimed.
 
-Main limitations:
+## Portfolio Takeaway
 
-- The fail class is small, with only 104 fail cases overall and 21 fail cases in the test split.
-- The model selection is based on one validation split.
-- The main split is stratified and random, so it may not fully reflect future process drift over time.
-- The final threshold was tuned on validation balanced accuracy, not on a real business or engineering cost function.
-- The sensor variables are anonymous, so feature importance does not prove physical root causes.
-- No repeated cross-validation, time-based validation, calibration, deployment, monitoring, SQL layer, dashboard, GenAI component, or MLOps workflow is included.
-- No real fab stakeholder validation, business adoption, or cost savings are confirmed.
+This project shows a practical imbalanced-classification workflow:
 
-## Future Improvements
+- start with a notebook-first analysis
+- move core logic into reusable Python modules
+- run validation-only Random Forest experiments
+- track runs with MLflow
+- select thresholds using validation data
+- evaluate once on a holdout test split
+- report the screening trade-off clearly
 
-Useful next steps would be:
-
-- run repeated stratified validation or cross-validation
-- add a time-based validation split using the timestamp fields
-- test cost-based threshold choices for false positives and false negatives
-- add calibration checks for predicted probabilities
-- compare permutation importance or SHAP with clear non-causal wording
-- document the data and feature limitations more deeply
-- optionally build a simple read-only review app for threshold trade-offs
+The strongest portfolio message is that threshold choice matters for fail-class screening. The validation-selected operating point caught more fail cases than the default `0.50` threshold, while also increasing review workload. That trade-off is the central result.
 
 ## Related Files
 
-- Main notebook: [`notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
-- Walkthrough: [`walkthrough/project-walkthrough.md`](walkthrough/project-walkthrough.md)
 - Dataset note: [`data/README.md`](data/README.md)
-- Output figure note: [`outputs/README.md`](outputs/README.md)
-- Assignment report: [`reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf`](reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf)
-- Portfolio PDF: [`reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf`](reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf)
-- Requirements file: [`requirements.txt`](requirements.txt)
+- Output note: [`outputs/README.md`](outputs/README.md)
+- Walkthrough: [`walkthrough/project-walkthrough.md`](walkthrough/project-walkthrough.md)
+- Experiment summary: [`reports/experiment_summary.md`](reports/experiment_summary.md)
+- Model card: [`reports/model_card.md`](reports/model_card.md)

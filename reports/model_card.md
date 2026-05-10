@@ -10,7 +10,7 @@ This model is intended for portfolio analysis of imbalanced semiconductor pass/f
 
 ## Not Intended Use
 
-This model is not intended for operational deployment, automated fab pass/fail decisions, safety-critical decisions, or root-cause diagnosis. It should not be used to make real manufacturing decisions without domain validation, cost analysis, monitoring, and process-engineering review.
+This model is not intended for operational deployment, automated fab pass/fail decisions, safety-critical decisions, or process diagnosis. It should not be used to make real manufacturing decisions without domain validation, cost analysis, monitoring, and process-engineering review.
 
 ## Dataset
 
@@ -85,4 +85,4 @@ This supports a screening interpretation rather than an automated decision inter
 
 ## Non-Production Status
 
-This model is an analytical and portfolio workflow artifact. It is not production-ready and has not been validated with real fab stakeholders.
+This model is an analytical and portfolio workflow artifact. It is not an operational manufacturing system and has not been validated with fab stakeholders.
