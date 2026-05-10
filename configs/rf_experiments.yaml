@@ -36,7 +36,7 @@ threshold_search:
   min_threshold: 0.05
   max_threshold: 0.95
   num_thresholds: 181
-  selection_metric: balanced_accuracy
+  selection_metric: f2
   supported_metrics:
     - balanced_accuracy
     - f2
@@ -49,7 +49,7 @@ experiments:
     threshold: 0.50
   - name: logistic_regression_pca_baseline
     model_type: logistic_regression_pca
-    threshold_selection: validation_balanced_accuracy
+    threshold_selection: validation_f2
   - name: rf_default_threshold_050
     model_type: random_forest
     params:
@@ -80,7 +80,7 @@ experiments:
       min_samples_leaf: 3
       class_weight: balanced_subsample
       random_state: 42
-    threshold_selection: validation_balanced_accuracy
+    threshold_selection: validation_f2
   - name: rf_random_search_best_threshold_050
     model_type: random_forest
     search: random_search
@@ -88,7 +88,40 @@ experiments:
   - name: rf_random_search_best_threshold_tuned
     model_type: random_forest
     search: random_search
-    threshold_selection: validation_balanced_accuracy
+    threshold_selection: validation_f2
+
+random_search:
+  n_iter: 8
+  cv_splits: 3
+  scoring: f2
+  n_jobs: 1
+  random_state: 42
+  params:
+    n_estimators:
+      - 200
+      - 300
+      - 400
+    max_depth:
+      - null
+      - 6
+      - 10
+      - 16
+    min_samples_leaf:
+      - 1
+      - 2
+      - 3
+      - 5
+    min_samples_split:
+      - 2
+      - 5
+      - 10
+    max_features:
+      - sqrt
+      - log2
+      - null
+    class_weight:
+      - balanced
+      - balanced_subsample
 
 outputs:
   metrics_dir: outputs/metrics
@@ -103,7 +136,7 @@ outputs:
   feature_importance: outputs/figures/feature_importance.png
 
 mlflow:
-  enabled: false
+  enabled: true
   tracking_uri: sqlite:///mlflow.db
-  experiment_name: secom-rf-screening
+  experiment_name: secom-pass-fail-screening
   artifact_location: mlartifacts

@@ -32,7 +32,7 @@ def default_threshold_grid(
 ) -> np.ndarray:
     """Return the notebook-style threshold grid."""
 
-    return np.linspace(min_threshold, max_threshold, num_thresholds)
+    return np.round(np.linspace(min_threshold, max_threshold, num_thresholds), 6)
 
 
 def generate_threshold_sweep(
@@ -65,8 +65,12 @@ def select_threshold(
         raise ValueError(f"Unsupported threshold metric: {metric}. Use {supported}.")
 
     sweep = generate_threshold_sweep(y_true, y_score, thresholds=thresholds)
-    best_index = sweep[metric].astype(float).idxmax()
-    selected_row = sweep.loc[best_index].to_dict()
+    ranked = sweep.sort_values(
+        by=[metric, "review_rate", "threshold"],
+        ascending=[False, True, True],
+        kind="mergesort",
+    )
+    selected_row = ranked.iloc[0].to_dict()
 
     return ThresholdSelection(
         threshold=float(selected_row["threshold"]),

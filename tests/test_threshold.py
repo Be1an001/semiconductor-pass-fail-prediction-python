@@ -48,3 +48,19 @@ def test_select_threshold_supports_f2_score() -> None:
 
     assert selection.threshold in thresholds
     assert selection.metric == "f2"
+
+
+def test_select_threshold_tie_prefers_lower_review_rate() -> None:
+    y_true = [0, 1]
+    y_score = [0.40, 0.90]
+    thresholds = [0.30, 0.50]
+
+    selection = select_threshold(
+        y_true,
+        y_score,
+        metric="f2",
+        thresholds=thresholds,
+    )
+
+    assert selection.threshold == 0.50
+    assert selection.row["review_rate"] == 0.50
