@@ -1,0 +1,75 @@
+project:
+  name: secom-pass-fail-mlops-lite
+  description: Final Random Forest holdout evaluation settings.
+
+random_seed: 42
+
+data:
+  feature_path: data/secom.data
+  labels_path: data/secom_labels.data
+  names_path: data/secom.names
+
+split:
+  test_size: 0.20
+  validation_size: 0.20
+  stratify: true
+  random_state: 42
+  threshold_selection_split: validation
+  final_evaluation_split: test
+
+preprocessing:
+  missingness_threshold: 0.50
+  imputation_strategy: median
+  tree_path:
+    use_pca: false
+
+selection:
+  validation_metrics_path: outputs/metrics/validation_metrics.csv
+  source_experiments_config: configs/rf_experiments.yaml
+  selected_experiment_name: null
+  candidate_model_type: random_forest
+  require_validation_threshold: true
+  primary_metric: f2
+  tie_breakers:
+    - metric: review_rate
+      direction: asc
+    - metric: balanced_accuracy
+      direction: desc
+    - metric: pr_auc
+      direction: desc
+  threshold_column: threshold
+
+final_model:
+  name: random_forest
+  selected_from: validation_metrics
+  params:
+    n_estimators: 400
+    min_samples_leaf: 3
+    class_weight: balanced_subsample
+    n_jobs: -1
+    random_state: 42
+
+threshold:
+  source: validation
+  selection_metric: f2
+  selected_threshold: null
+  notebook_reference_threshold: 0.110
+  never_tune_on: test
+
+outputs:
+  metrics_dir: outputs/metrics
+  figures_dir: outputs/figures
+  final_test_metrics: outputs/metrics/final_test_metrics.csv
+  final_feature_importance: outputs/metrics/final_feature_importance.csv
+  confusion_matrix: outputs/figures/final_confusion_matrix.png
+  roc_curve: outputs/figures/final_roc_curve.png
+  pr_curve: outputs/figures/final_pr_curve.png
+  feature_importance: outputs/figures/final_feature_importance.png
+  model_card: reports/model_card.md
+  experiment_summary: reports/experiment_summary.md
+
+mlflow:
+  enabled: true
+  tracking_uri: sqlite:///mlflow.db
+  experiment_name: secom-pass-fail-screening
+  run_name: final_holdout_evaluation
