@@ -18,6 +18,20 @@ Thumbs.db
 venv/
 env/
 
+# MLflow local tracking
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+
+# Model artifacts / local generated binaries
+*.joblib
+*.pkl
+*.pickle
+
 # Logs
 *.log
 
