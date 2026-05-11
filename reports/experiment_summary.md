@@ -27,7 +27,7 @@ The CSV metric `review_rate` is interpreted here as flagged sample rate:
 
 ## Validation Experiment Design
 
-The script-based workflow uses the same stratified 60/20/20 train, validation, and test split logic as the original notebook. Preprocessing is fit on the training split only. The validation split is used for model comparison and threshold selection. The holdout test split is reserved for one final evaluation after the model and threshold are selected.
+The script-based workflow uses a stratified 60/20/20 train, validation, and test split. Preprocessing is fit on the training split only. The validation split is used for model comparison and threshold selection. The holdout test split is reserved for one final evaluation after the model and threshold are selected.
 
 Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned thresholds are selected by maximizing F2-score, with ties resolved toward lower flagged sample rate.
 

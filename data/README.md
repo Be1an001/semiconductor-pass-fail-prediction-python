@@ -1,6 +1,6 @@
 # Data Note
 
-This folder contains the public UCI SECOM dataset files used in the notebook.
+This folder contains the public UCI SECOM dataset files used by the notebook and script workflow.
 
 ## Files
 
@@ -20,7 +20,7 @@ Direct source links:
 - `secom_labels.data`: https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom_labels.data
 - `secom.names`: https://archive.ics.uci.edu/ml/machine-learning-databases/secom/secom.names
 
-## How the Notebook Uses the Files
+## How the Project Uses the Files
 
 ### `secom.data`
 
@@ -64,9 +64,9 @@ The UCI metadata may describe the dataset at a slightly different attribute-coun
 
 ## Public Repository Note
 
-The raw SECOM files are included here because they are public academic dataset files and small enough for this repository. Keeping them in the repo makes the notebook easier to review and rerun without downloading the source files again.
+The raw SECOM files are included here because they are public academic dataset files and small enough for this repository. Keeping them in the repo makes the final notebook and scripts easier to review and rerun.
 
-The notebook still includes fallback download logic for the same UCI files if a complete local data folder is not available.
+The final portfolio notebook expects these local files to be present and checks for them before running.
 
 ## Caution
 

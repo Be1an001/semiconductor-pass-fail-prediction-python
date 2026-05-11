@@ -1,4 +1,4 @@
-"""MLflow helper skeletons for later SECOM experiment tracking."""
+"""MLflow helper utilities for SECOM experiment tracking."""
 
 from __future__ import annotations
 
