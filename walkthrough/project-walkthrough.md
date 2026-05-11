@@ -7,7 +7,8 @@ See:
 - Root README: [`../README.md`](../README.md)
 - Experiment summary: [`../reports/experiment_summary.md`](../reports/experiment_summary.md)
 - Model card: [`../reports/model_card.md`](../reports/model_card.md)
-- Main notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
+- Final portfolio notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
+- Archived original notebook: [`../notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb`](../notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb)
 - Data note: [`../data/README.md`](../data/README.md)
 - Output note: [`../outputs/README.md`](../outputs/README.md)
 
@@ -15,7 +16,7 @@ See:
 
 This project uses the public UCI SECOM dataset to study semiconductor pass/fail screening with sensor data.
 
-The first version was notebook-first. The current version keeps that notebook but adds a script-based workflow for reproducible Random Forest experiments, validation-based threshold selection, local MLflow tracking, final holdout evaluation, and generated reports.
+The first version was notebook-first. The current version keeps the original notebook in `notebooks/archive/` and uses the main notebook as the final portfolio presentation. The script-based workflow handles reproducible Random Forest experiments, validation-based threshold selection, local MLflow tracking, final holdout evaluation, and generated reports.
 
 The project is a portfolio workflow and screening prototype. It is not an operational manufacturing decision system.
 
@@ -25,7 +26,7 @@ The project asks:
 
 **Can sensor measurements help flag units that are more likely to fail?**
 
-The model is not used as an automatic pass/fail decision. It is evaluated as a possible human review support tool. The main question is whether a lower threshold can catch more fail cases while keeping the review workload understandable.
+The modeling goal is to identify patterns that can help flag likely fail cases. The main question is whether a lower threshold can catch more fail cases while keeping the flagged sample rate understandable.
 
 ## Dataset
 
@@ -48,7 +49,7 @@ The sensor variables are anonymous, so feature importance should be interpreted 
 
 ## Original Notebook Workflow
 
-The notebook still shows the exploratory and modeling process:
+The archived original notebook shows the exploratory and modeling process:
 
 1. Load SECOM sensor and label files.
 2. Map raw labels to binary pass/fail values.
@@ -61,7 +62,7 @@ The notebook still shows the exploratory and modeling process:
 9. Evaluate the selected model once on the holdout test set.
 10. Review Random Forest feature importance as model-driven signals.
 
-The notebook is preserved as the original project artifact.
+The main notebook now presents the final interview-ready workflow by reading generated data, metrics, figures, and reports. It does not rerun model tuning.
 
 ## Script-Based Workflow
 
@@ -93,12 +94,12 @@ The validation experiments compare simple baselines and Random Forest variants.
 
 The most important Random Forest comparison is:
 
-| Experiment | Threshold | Recall | F2 | Balanced accuracy | TP | FP | FN | TN | Review rate |
+| Experiment | Threshold | Recall | F2 | Balanced accuracy | TP | FP | FN | TN | Flagged sample rate |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `rf_current_config_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0 | 0 | 21 | 293 | 0.0000 |
 | `rf_current_config_threshold_tuned` | 0.110 | 0.5714 | 0.3371 | 0.6458 | 12 | 82 | 9 | 211 | 0.2994 |
 
-At threshold `0.50`, the current Random Forest configuration missed all validation fail cases. The validation-selected threshold caught more fail cases, but it also increased the review workload.
+At threshold `0.50`, the current Random Forest configuration missed all validation fail cases. The validation-selected threshold caught more fail cases, but it also increased the flagged sample rate.
 
 That is the main trade-off: better fail-case screening behavior comes with more false positives.
 
@@ -124,9 +125,9 @@ Final holdout test metrics:
 | FP | 56 |
 | FN | 10 |
 | TN | 237 |
-| Review rate | 0.2134 |
+| Flagged sample rate | 0.2134 |
 
-The model detected 11 of 21 fail cases in the test split and flagged 56 pass cases for review.
+The model detected 11 of 21 fail cases in the test split and flagged 56 pass cases.
 
 ## Generated Reports
 
@@ -152,8 +153,8 @@ The useful story is not raw accuracy. The useful story is threshold-based fail s
 
 - how many fail cases are caught
 - how many fail cases are missed
-- how many pass cases are sent to review
-- how much review workload the threshold creates
+- how many pass cases are flagged
+- the flagged sample rate created by the threshold
 
 Feature importance values are useful for model review, but they are not process explanations.
 
@@ -175,4 +176,4 @@ Good next steps would be:
 - compare thresholds against review-capacity assumptions
 - add calibration checks
 - check feature-importance stability across resamples
-- create a final interview notebook after the script workflow is stable
+- keep the final portfolio notebook updated when script results change

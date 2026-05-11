@@ -141,9 +141,9 @@ The sensor variables are anonymous. Feature importance values should be read as 
 
 ## Imbalanced Classification Challenge
 
-The fail class is rare, so raw accuracy can be misleading. A model can obtain high accuracy by predicting nearly every sample as pass while missing all fail cases. For this reason, the evaluation emphasizes fail-class recall, F2-score, balanced accuracy, PR-AUC, ROC-AUC, confusion matrix counts, and review workload.
+The fail class is rare, so raw accuracy can be misleading. A model can obtain high accuracy by predicting nearly every sample as pass while missing all fail cases. For this reason, the evaluation emphasizes fail-class recall, F2-score, balanced accuracy, PR-AUC, ROC-AUC, confusion matrix counts, and flagged sample rate.
 
-Review workload is reported as:
+The CSV metric `review_rate` is interpreted here as flagged sample rate:
 
 `review_rate = (TP + FP) / total_samples`
 
@@ -151,7 +151,7 @@ Review workload is reported as:
 
 The script-based workflow uses the same stratified 60/20/20 train, validation, and test split logic as the original notebook. Preprocessing is fit on the training split only. The validation split is used for model comparison and threshold selection. The holdout test split is reserved for one final evaluation after the model and threshold are selected.
 
-Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned thresholds are selected by maximizing F2-score, with ties resolved toward lower review rate.
+Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned thresholds are selected by maximizing F2-score, with ties resolved toward lower flagged sample rate.
 
 ## Validation Metrics
 
@@ -169,12 +169,12 @@ The selected model and threshold were evaluated once on the untouched holdout te
 
 {final_table}
 
-On the final holdout split, the model detected {int(final_row["tp"])} of {int(final_row["tp"] + final_row["fn"])} fail cases. It also flagged {int(final_row["fp"])} pass cases for review. This supports a screening interpretation: the model can surface a subset of higher-risk samples, but it is not an automated accept/reject system.
+On the final holdout split, the model detected {int(final_row["tp"])} of {int(final_row["tp"] + final_row["fn"])} fail cases. It also flagged {int(final_row["fp"])} pass cases. This supports a screening interpretation, not an automated decision rule.
 
 ## Key Interpretation
 
 - The useful story is not raw accuracy.
-- The practical story is fail-class screening performance and the review workload created by lower thresholds.
+- The practical story is fail-class screening performance and the flagged sample rate created by lower thresholds.
 - The validation-selected threshold improves fail recall compared with the default 0.50 threshold.
 - The false-positive count means downstream review capacity and cost would matter in any real operating setting.
 
@@ -194,7 +194,7 @@ On the final holdout split, the model detected {int(final_row["tp"])} of {int(fi
 - Compare threshold options against explicit review-capacity assumptions.
 - Add calibration checks for predicted probabilities.
 - Add stability checks for feature importance across resamples.
-- Preserve the original notebook and create a final interview notebook only after the script-based workflow is stable.
+- Keep the final portfolio notebook updated when script results change.
 """
 
 
@@ -288,7 +288,7 @@ Random Forest classifier with class imbalance handling from the selected validat
 
 ## Threshold Selection Method
 
-The final threshold was selected from validation probabilities only. The selection metric was F2-score, which emphasizes fail-class recall more than precision. Ties are resolved toward lower review rate. The test set was not used for threshold selection.
+The final threshold was selected from validation probabilities only. The selection metric was F2-score, which emphasizes fail-class recall more than precision. Ties are resolved toward lower flagged sample rate. The test set was not used for threshold selection.
 
 ## Validation Metrics Summary
 
@@ -300,7 +300,7 @@ The final threshold was selected from validation probabilities only. The selecti
 
 ## Operational Interpretation
 
-At the selected threshold, the final holdout evaluation detected {int(final_row["tp"])} fail cases and missed {int(final_row["fn"])} fail cases. It also flagged {int(final_row["fp"])} pass cases for review, producing a review rate of {format_percent(final_row["review_rate"])}.
+At the selected threshold, the final holdout evaluation detected {int(final_row["tp"])} fail cases and missed {int(final_row["fn"])} fail cases. It also flagged {int(final_row["fp"])} pass cases, producing a flagged sample rate of {format_percent(final_row["review_rate"])}.
 
 This supports a screening interpretation rather than an automated decision interpretation.
 
@@ -308,7 +308,7 @@ This supports a screening interpretation rather than an automated decision inter
 
 - The dataset is small and highly imbalanced.
 - False negatives could represent missed fail cases.
-- False positives create review workload.
+- False positives increase the flagged sample count.
 - The data is historical, anonymous, and not tied to live operational context.
 - Feature importance values are not process-causal explanations.
 - The threshold is not based on a real business or engineering cost function.
@@ -329,7 +329,11 @@ This model is an analytical and portfolio workflow artifact. It is not an operat
 
 
 def markdown_table(data: pd.DataFrame, columns: list[str]) -> str:
-    headers = columns
+    display_headers = {
+        "review_count": "flagged_sample_count",
+        "review_rate": "flagged_sample_rate",
+    }
+    headers = [display_headers.get(column, column) for column in columns]
     rows = []
     for _, row in data.loc[:, columns].iterrows():
         rows.append([format_cell(row[column]) for column in columns])

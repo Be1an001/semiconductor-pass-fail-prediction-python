@@ -10,15 +10,15 @@ The main question is:
 
 **Can sensor measurements help flag units that are more likely to fail downstream testing?**
 
-The project started as a notebook-first analysis and now also includes a script-based workflow. The current version keeps the original notebook, but adds reusable Python modules, configuration files, MLflow tracking, generated metrics, final holdout evaluation, and portfolio-ready reports.
+The project started as a notebook-first analysis and now also includes a script-based workflow. The current version archives the original notebook and adds a final portfolio notebook, reusable Python modules, configuration files, MLflow tracking, generated metrics, final holdout evaluation, and portfolio-ready reports.
 
-The main story is not raw accuracy. The dataset is highly imbalanced, so the more useful story is the fail-class screening trade-off: recall, F2-score, balanced accuracy, PR-AUC, confusion matrix counts, and review workload.
+The main story is not raw accuracy. The dataset is highly imbalanced, so the more useful story is the fail-class screening trade-off: recall, F2-score, balanced accuracy, PR-AUC, confusion matrix counts, and flagged sample rate.
 
-## Business Problem
+## Problem Framing
 
 Semiconductor manufacturing can produce many sensor and process measurements. A useful analytics task is to identify units that may deserve extra review before final downstream testing.
 
-In this project, the model is treated as human review support. A lower threshold can catch more fail cases, but it also creates more false positives and a higher review rate. That threshold trade-off is the main modeling decision.
+The modeling goal is to identify patterns that can help flag likely fail cases under class imbalance. A lower threshold can catch more fail cases, but it also creates more false positives and a higher flagged sample rate. That threshold trade-off is the main modeling decision.
 
 ## Dataset
 
@@ -47,7 +47,7 @@ Only about 6.6% of samples are fail cases. A model can look good by raw accuracy
 
 For example, on the validation split, the current Random Forest configuration at threshold `0.50` missed every fail case:
 
-| Experiment | Threshold | Recall | F2 | Balanced accuracy | TP | FP | FN | TN | Review rate |
+| Experiment | Threshold | Recall | F2 | Balanced accuracy | TP | FP | FN | TN | Flagged sample rate |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `rf_current_config_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0 | 0 | 21 | 293 | 0.0000 |
 | `rf_current_config_threshold_tuned` | 0.110 | 0.5714 | 0.3371 | 0.6458 | 12 | 82 | 9 | 211 | 0.2994 |
@@ -58,8 +58,9 @@ The tuned threshold changed the operating point. It caught more fail cases, but 
 
 The current workflow has two layers:
 
-1. The original notebook remains available as the course/portfolio baseline.
+1. The archived original notebook remains available as the first notebook-first baseline.
 2. The script-based workflow runs reproducible experiments and produces metrics, figures, and reports.
+3. The final portfolio notebook reads the generated outputs and summarizes the project.
 
 Script workflow:
 
@@ -80,7 +81,7 @@ The test set is not used for model selection, threshold selection, or hyperparam
 | Path | Description |
 |---|---|
 | `data/` | Public SECOM data files and dataset note |
-| `notebooks/` | Original notebook workflow |
+| `notebooks/` | Final portfolio notebook and archived original notebook |
 | `src/secom_ml/` | Reusable data, split, preprocessing, model, metric, threshold, plot, and tracking helpers |
 | `scripts/` | Command-line scripts for experiments, final evaluation, and report export |
 | `configs/` | YAML configuration files for experiments and final evaluation |
@@ -107,13 +108,13 @@ Preprocessing is fit on training data only:
 - tree-model path without scaling or PCA
 - linear baseline path with imputation, variance filtering, scaling, and PCA
 
-Threshold sweeps use validation probabilities from `0.05` to `0.95`. Tuned thresholds are selected by F2-score, with ties resolved toward lower review rate.
+Threshold sweeps use validation probabilities from `0.05` to `0.95`. Tuned thresholds are selected by F2-score, with ties resolved toward lower flagged sample rate.
 
 ## Random Forest Iterative Results
 
 The table below comes from `outputs/metrics/rf_improvement_table.csv`.
 
-| Experiment | Threshold | Recall | F2 | Balanced accuracy | PR-AUC | TP | FP | FN | TN | Review rate |
+| Experiment | Threshold | Recall | F2 | Balanced accuracy | PR-AUC | TP | FP | FN | TN | Flagged sample rate |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `rf_default_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0.1417 | 0 | 0 | 21 | 293 | 0.0000 |
 | `rf_balanced_threshold_050` | 0.500 | 0.0000 | 0.0000 | 0.5000 | 0.1329 | 0 | 0 | 21 | 293 | 0.0000 |
@@ -143,9 +144,9 @@ Source file: `outputs/metrics/final_test_metrics.csv`
 | FP | 56 |
 | FN | 10 |
 | TN | 237 |
-| Review rate | 0.2134 |
+| Flagged sample rate | 0.2134 |
 
-The final model detected 11 of 21 fail cases in the holdout test split. It also flagged 56 pass cases for review. This is useful as a screening prototype, but it is not an automated accept/reject decision rule.
+The final model detected 11 of 21 fail cases in the holdout test split. At this threshold, it also flagged 56 pass cases. This is a screening result, not an accept/reject rule.
 
 ## MLflow Experiment Tracking
 
@@ -189,6 +190,7 @@ Reports:
 Original project materials:
 
 - `notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`
+- `notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb`
 - `reports/EAI6010_Module_4_Assignment_V2_Cheng_L.pdf`
 - `reports/EAI6010_SECOM_Portfolio_Cheng_Liu.pdf`
 
@@ -256,10 +258,12 @@ This project shows a practical imbalanced-classification workflow:
 - evaluate once on a holdout test split
 - report the screening trade-off clearly
 
-The strongest portfolio message is that threshold choice matters for fail-class screening. The validation-selected operating point caught more fail cases than the default `0.50` threshold, while also increasing review workload. That trade-off is the central result.
+The strongest portfolio message is that threshold choice matters for fail-class screening. The validation-selected operating point caught more fail cases than the default `0.50` threshold, while also increasing the flagged sample rate. That trade-off is the central result.
 
 ## Related Files
 
+- Final notebook: [`notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
+- Archived original notebook: [`notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb`](notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb)
 - Dataset note: [`data/README.md`](data/README.md)
 - Output note: [`outputs/README.md`](outputs/README.md)
 - Walkthrough: [`walkthrough/project-walkthrough.md`](walkthrough/project-walkthrough.md)
