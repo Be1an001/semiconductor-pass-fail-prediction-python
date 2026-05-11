@@ -1,6 +1,6 @@
 # Project Walkthrough
 
-This walkthrough summarizes the main analysis decisions behind the SECOM semiconductor pass/fail prediction project. It is meant to be read with the root README, generated reports, data note, and output files.
+This walkthrough summarizes the main analysis decisions behind the SECOM semiconductor pass/fail prediction project. It is meant to be read with the root README, generated reports, data note, output guide, and final notebook.
 
 See:
 
@@ -9,23 +9,23 @@ See:
 - Model card: [`../reports/model_card.md`](../reports/model_card.md)
 - Final portfolio notebook: [`../notebooks/EAI6010_SECOM_Pass_Fail_Portfolio.ipynb`](../notebooks/EAI6010_SECOM_Pass_Fail_Portfolio.ipynb)
 - Data note: [`../data/README.md`](../data/README.md)
-- Output note: [`../outputs/README.md`](../outputs/README.md)
+- Output guide: [`../outputs/README.md`](../outputs/README.md)
 
 ## Project Overview
 
 This project uses the public UCI SECOM dataset to study semiconductor pass/fail screening with sensor data.
 
-The final notebook presents the project for portfolio review. The script-based workflow handles reproducible Random Forest experiments, validation-based threshold selection, local MLflow tracking, final holdout evaluation, and generated reports.
+The final notebook presents the project for portfolio review. The script-based workflow handles reusable preprocessing, Random Forest validation experiments, validation-based threshold selection, local MLflow tracking, final holdout evaluation, and generated reports.
 
-The project is a portfolio workflow and screening prototype. It is not an operational manufacturing decision system.
+This project is best understood as a portfolio workflow and screening-style ML prototype. It is not an operational manufacturing decision system.
 
-## Business Question
+## Business Problem
 
 The project asks:
 
 **Can sensor measurements help flag units that are more likely to fail?**
 
-The modeling goal is to identify patterns that can help flag likely fail cases. The main question is whether a lower threshold can catch more fail cases while keeping the flagged sample rate understandable.
+The fail class is rare, so the main question is not whether the model can produce high raw accuracy. The more useful question is whether a validation-selected threshold can catch more fail cases while keeping the flagged sample rate understandable.
 
 ## Dataset
 
@@ -38,7 +38,7 @@ Main files:
 Dataset summary:
 
 - 1,567 rows
-- 590 loaded sensor features
+- 590 loaded anonymous sensor features
 - 1,463 pass samples
 - 104 fail samples
 - 6.64% fail rate
@@ -46,7 +46,7 @@ Dataset summary:
 
 The sensor variables are anonymous, so feature importance should be interpreted carefully.
 
-## Project Workflow
+## Methodology
 
 The project workflow is:
 
@@ -58,8 +58,9 @@ The project workflow is:
 6. Fit preprocessing on training data only.
 7. Compare Dummy Classifier, Logistic Regression + PCA, and Random Forest variants.
 8. Tune thresholds on validation data.
-9. Evaluate the selected model once on the holdout test set.
-10. Review Random Forest feature importance as model-driven signals.
+9. Track experiments with local MLflow.
+10. Evaluate the selected model once on the holdout test set.
+11. Review Random Forest feature importance as model-driven signals.
 
 The latest reproducible results come from the script-based workflow. The final notebook presents those results by reading generated data, metrics, figures, and reports. It does not rerun model tuning.
 
@@ -130,6 +131,26 @@ The model detected 11 of 21 fail cases in the test split and flagged 56 pass cas
 
 ![Final confusion matrix](../outputs/figures/final_confusion_matrix.png)
 
+## Visual Evidence
+
+### Precision-recall curve
+
+The PR curve is important because the fail class is rare.
+
+![Final precision-recall curve](../outputs/figures/final_pr_curve.png)
+
+### ROC curve
+
+The ROC curve summarizes ranking behavior, but it should be read together with PR-AUC and confusion matrix counts.
+
+![Final ROC curve](../outputs/figures/final_roc_curve.png)
+
+### Feature importance
+
+Feature importance shows model-driven signal ranking, not physical root-cause proof.
+
+![Final feature importance](../outputs/figures/final_feature_importance.png)
+
 ## Generated Reports
 
 The generated Markdown reports summarize the script-based results:
@@ -146,7 +167,7 @@ The experiment scripts use local MLflow tracking:
 - tracking URI: `sqlite:///mlflow.db`
 - experiment name: `secom-pass-fail-screening`
 
-Local MLflow files are ignored by Git.
+Local MLflow files are ignored by Git. This is useful for local reproducibility, but it is not a production monitoring setup.
 
 ## Interpretation
 
@@ -167,9 +188,9 @@ Feature importance values are useful for model review, but they are not process 
 - A time-based validation split is not yet included.
 - Threshold choice is not tied to a real engineering cost function.
 - The dataset is public and anonymous.
-- No fab stakeholder validation or operational rollout is claimed.
+- No fab stakeholder validation, operational rollout, dashboard, SQL layer, GenAI component, or full MLOps platform is claimed.
 
-## Next Steps
+## Future Improvements
 
 Good next steps would be:
 

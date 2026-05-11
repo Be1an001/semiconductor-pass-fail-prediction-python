@@ -24,7 +24,7 @@ Direct source links:
 
 ### `secom.data`
 
-The notebook loads this file as the feature matrix and renames the columns as:
+The notebook and scripts load this file as the feature matrix and rename the columns as:
 
 - `sensor_001`
 - `sensor_002`
@@ -35,7 +35,7 @@ The sensor variables are anonymous, so they should be treated as model input fea
 
 ### `secom_labels.data`
 
-The notebook loads this file to create:
+The notebook and scripts load this file to create:
 
 - the binary pass/fail target
 - timestamp-based exploratory checks
@@ -66,7 +66,7 @@ The UCI metadata may describe the dataset at a slightly different attribute-coun
 
 The raw SECOM files are included here because they are public academic dataset files and small enough for this repository. Keeping them in the repo makes the final notebook and scripts easier to review and rerun.
 
-The final portfolio notebook expects these local files to be present and checks for them before running.
+The script workflow and final portfolio notebook expect these local files to be present and check for them before running.
 
 ## Caution
 
