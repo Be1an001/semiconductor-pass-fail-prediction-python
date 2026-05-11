@@ -67,9 +67,7 @@ def build_experiment_summary(
 ) -> str:
     final_row = final_test_metrics.iloc[0]
     selected_name = final_row["selected_experiment_name"]
-    selected_validation = validation_metrics[
-        validation_metrics["experiment_name"] == selected_name
-    ].iloc[0]
+    selected_validation = selected_validation_row(validation_metrics, selected_name)
 
     validation_table = markdown_table(
         validation_metrics,
@@ -149,7 +147,7 @@ The CSV metric `review_rate` is interpreted here as flagged sample rate:
 
 ## Validation Experiment Design
 
-The script-based workflow uses the same stratified 60/20/20 train, validation, and test split logic as the original notebook. Preprocessing is fit on the training split only. The validation split is used for model comparison and threshold selection. The holdout test split is reserved for one final evaluation after the model and threshold are selected.
+The script-based workflow uses a stratified 60/20/20 train, validation, and test split. Preprocessing is fit on the training split only. The validation split is used for model comparison and threshold selection. The holdout test split is reserved for one final evaluation after the model and threshold are selected.
 
 Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned thresholds are selected by maximizing F2-score, with ties resolved toward lower flagged sample rate.
 
@@ -204,9 +202,7 @@ def build_model_card(
 ) -> str:
     final_row = final_test_metrics.iloc[0]
     selected_name = final_row["selected_experiment_name"]
-    validation_row = validation_metrics[
-        validation_metrics["experiment_name"] == selected_name
-    ].iloc[0]
+    validation_row = selected_validation_row(validation_metrics, selected_name)
 
     validation_table = markdown_table(
         pd.DataFrame([validation_row]),
@@ -342,6 +338,22 @@ def markdown_table(data: pd.DataFrame, columns: list[str]) -> str:
     separator_line = "| " + " | ".join(["---"] * len(headers)) + " |"
     row_lines = ["| " + " | ".join(row) + " |" for row in rows]
     return "\n".join([header_line, separator_line, *row_lines])
+
+
+def selected_validation_row(
+    validation_metrics: pd.DataFrame, selected_name: object
+) -> pd.Series:
+    """Return the validation row for the selected final experiment."""
+
+    matches = validation_metrics[
+        validation_metrics["experiment_name"] == selected_name
+    ]
+    if matches.empty:
+        raise ValueError(
+            "Selected experiment from final_test_metrics.csv was not found "
+            f"in validation_metrics.csv: {selected_name}"
+        )
+    return matches.iloc[0]
 
 
 def format_cell(value: object) -> str:

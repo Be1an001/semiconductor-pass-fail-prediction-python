@@ -7,8 +7,7 @@ See:
 - Root README: [`../README.md`](../README.md)
 - Experiment summary: [`../reports/experiment_summary.md`](../reports/experiment_summary.md)
 - Model card: [`../reports/model_card.md`](../reports/model_card.md)
-- Final portfolio notebook: [`../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb`](../notebooks/EAI6010_Module_4_Assignment_V2_Cheng_L.ipynb)
-- Archived original notebook: [`../notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb`](../notebooks/archive/EAI6010_Module_4_Assignment_V2_Cheng_L_original.ipynb)
+- Final portfolio notebook: [`../notebooks/EAI6010_SECOM_Pass_Fail_Portfolio.ipynb`](../notebooks/EAI6010_SECOM_Pass_Fail_Portfolio.ipynb)
 - Data note: [`../data/README.md`](../data/README.md)
 - Output note: [`../outputs/README.md`](../outputs/README.md)
 
@@ -16,7 +15,7 @@ See:
 
 This project uses the public UCI SECOM dataset to study semiconductor pass/fail screening with sensor data.
 
-The first version was notebook-first. The current version keeps the original notebook in `notebooks/archive/` and uses the main notebook as the final portfolio presentation. The script-based workflow handles reproducible Random Forest experiments, validation-based threshold selection, local MLflow tracking, final holdout evaluation, and generated reports.
+The final notebook presents the project for portfolio review. The script-based workflow handles reproducible Random Forest experiments, validation-based threshold selection, local MLflow tracking, final holdout evaluation, and generated reports.
 
 The project is a portfolio workflow and screening prototype. It is not an operational manufacturing decision system.
 
@@ -47,9 +46,9 @@ Dataset summary:
 
 The sensor variables are anonymous, so feature importance should be interpreted carefully.
 
-## Original Notebook Workflow
+## Project Workflow
 
-The archived original notebook shows the exploratory and modeling process:
+The project workflow is:
 
 1. Load SECOM sensor and label files.
 2. Map raw labels to binary pass/fail values.
@@ -57,12 +56,12 @@ The archived original notebook shows the exploratory and modeling process:
 4. Review class imbalance, missing values, and simple time patterns.
 5. Create a stratified train/validation/test split.
 6. Fit preprocessing on training data only.
-7. Compare Dummy Classifier, Logistic Regression + PCA, Random Forest, and weighted MLP.
+7. Compare Dummy Classifier, Logistic Regression + PCA, and Random Forest variants.
 8. Tune thresholds on validation data.
 9. Evaluate the selected model once on the holdout test set.
 10. Review Random Forest feature importance as model-driven signals.
 
-The main notebook now presents the final interview-ready workflow by reading generated data, metrics, figures, and reports. It does not rerun model tuning.
+The latest reproducible results come from the script-based workflow. The final notebook presents those results by reading generated data, metrics, figures, and reports. It does not rerun model tuning.
 
 ## Script-Based Workflow
 
@@ -128,6 +127,8 @@ Final holdout test metrics:
 | Flagged sample rate | 0.2134 |
 
 The model detected 11 of 21 fail cases in the test split and flagged 56 pass cases.
+
+![Final confusion matrix](../outputs/figures/final_confusion_matrix.png)
 
 ## Generated Reports
 
