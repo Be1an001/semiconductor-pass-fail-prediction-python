@@ -19,9 +19,9 @@ The sensor variables are anonymous. Feature importance values should be read as 
 
 ## Imbalanced Classification Challenge
 
-The fail class is rare, so raw accuracy can be misleading. A model can obtain high accuracy by predicting nearly every sample as pass while missing all fail cases. For this reason, the evaluation emphasizes fail-class recall, F2-score, balanced accuracy, PR-AUC, ROC-AUC, confusion matrix counts, and review workload.
+The fail class is rare, so raw accuracy can be misleading. A model can obtain high accuracy by predicting nearly every sample as pass while missing all fail cases. For this reason, the evaluation emphasizes fail-class recall, F2-score, balanced accuracy, PR-AUC, ROC-AUC, confusion matrix counts, and flagged sample rate.
 
-Review workload is reported as:
+The CSV metric `review_rate` is interpreted here as flagged sample rate:
 
 `review_rate = (TP + FP) / total_samples`
 
@@ -29,11 +29,11 @@ Review workload is reported as:
 
 The script-based workflow uses the same stratified 60/20/20 train, validation, and test split logic as the original notebook. Preprocessing is fit on the training split only. The validation split is used for model comparison and threshold selection. The holdout test split is reserved for one final evaluation after the model and threshold are selected.
 
-Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned thresholds are selected by maximizing F2-score, with ties resolved toward lower review rate.
+Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned thresholds are selected by maximizing F2-score, with ties resolved toward lower flagged sample rate.
 
 ## Validation Metrics
 
-| experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | review_rate |
+| experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | flagged_sample_rate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | dummy_majority_baseline | 0.5000 | 0.0000 | 0.0000 | 0.5000 | 0.0669 | 0 | 0 | 21 | 293 | 0.0000 |
 | logistic_regression_pca_baseline | 0.3050 | 0.3810 | 0.3008 | 0.6205 | 0.1509 | 8 | 41 | 13 | 252 | 0.1561 |
@@ -46,7 +46,7 @@ Threshold sweeps use validation probabilities from 0.05 to 0.95. Tuned threshold
 
 ## Random Forest Iteration Comparison
 
-| experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | review_rate |
+| experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | flagged_sample_rate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | rf_default_threshold_050 | 0.5000 | 0.0000 | 0.0000 | 0.5000 | 0.1417 | 0 | 0 | 21 | 293 | 0.0000 |
 | rf_balanced_threshold_050 | 0.5000 | 0.0000 | 0.0000 | 0.5000 | 0.1329 | 0 | 0 | 21 | 293 | 0.0000 |
@@ -61,16 +61,16 @@ The validation results show that threshold choice has a larger practical effect 
 
 The selected model and threshold were evaluated once on the untouched holdout test set.
 
-| selected_experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | review_rate |
+| selected_experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | flagged_sample_rate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | rf_current_config_threshold_tuned | 0.1100 | 0.5238 | 0.3642 | 0.6663 | 0.2192 | 11 | 56 | 10 | 237 | 0.2134 |
 
-On the final holdout split, the model detected 11 of 21 fail cases. It also flagged 56 pass cases for review. This supports a screening interpretation: the model can surface a subset of higher-risk samples, but it is not an automated accept/reject system.
+On the final holdout split, the model detected 11 of 21 fail cases. It also flagged 56 pass cases. This supports a screening interpretation, not an automated decision rule.
 
 ## Key Interpretation
 
 - The useful story is not raw accuracy.
-- The practical story is fail-class screening performance and the review workload created by lower thresholds.
+- The practical story is fail-class screening performance and the flagged sample rate created by lower thresholds.
 - The validation-selected threshold improves fail recall compared with the default 0.50 threshold.
 - The false-positive count means downstream review capacity and cost would matter in any real operating setting.
 
@@ -90,4 +90,4 @@ On the final holdout split, the model detected 11 of 21 fail cases. It also flag
 - Compare threshold options against explicit review-capacity assumptions.
 - Add calibration checks for predicted probabilities.
 - Add stability checks for feature importance across resamples.
-- Preserve the original notebook and create a final interview notebook only after the script-based workflow is stable.
+- Keep the final portfolio notebook updated when script results change.

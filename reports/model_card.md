@@ -45,23 +45,23 @@ Random Forest classifier with class imbalance handling from the selected validat
 
 ## Threshold Selection Method
 
-The final threshold was selected from validation probabilities only. The selection metric was F2-score, which emphasizes fail-class recall more than precision. Ties are resolved toward lower review rate. The test set was not used for threshold selection.
+The final threshold was selected from validation probabilities only. The selection metric was F2-score, which emphasizes fail-class recall more than precision. Ties are resolved toward lower flagged sample rate. The test set was not used for threshold selection.
 
 ## Validation Metrics Summary
 
-| experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | review_rate |
+| experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | flagged_sample_rate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | rf_current_config_threshold_tuned | 0.1100 | 0.5714 | 0.3371 | 0.6458 | 0.1329 | 12 | 82 | 9 | 211 | 0.2994 |
 
 ## Final Test Metrics Summary
 
-| selected_experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | review_rate |
+| selected_experiment_name | threshold | recall | f2 | balanced_accuracy | pr_auc | tp | fp | fn | tn | flagged_sample_rate |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | rf_current_config_threshold_tuned | 0.1100 | 0.5238 | 0.3642 | 0.6663 | 0.2192 | 11 | 56 | 10 | 237 | 0.2134 |
 
 ## Operational Interpretation
 
-At the selected threshold, the final holdout evaluation detected 11 fail cases and missed 10 fail cases. It also flagged 56 pass cases for review, producing a review rate of 21.3%.
+At the selected threshold, the final holdout evaluation detected 11 fail cases and missed 10 fail cases. It also flagged 56 pass cases, producing a flagged sample rate of 21.3%.
 
 This supports a screening interpretation rather than an automated decision interpretation.
 
@@ -69,7 +69,7 @@ This supports a screening interpretation rather than an automated decision inter
 
 - The dataset is small and highly imbalanced.
 - False negatives could represent missed fail cases.
-- False positives create review workload.
+- False positives increase the flagged sample count.
 - The data is historical, anonymous, and not tied to live operational context.
 - Feature importance values are not process-causal explanations.
 - The threshold is not based on a real business or engineering cost function.

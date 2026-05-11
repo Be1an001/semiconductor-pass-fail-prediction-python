@@ -53,7 +53,6 @@ threshold:
   source: validation
   selection_metric: f2
   selected_threshold: null
-  notebook_reference_threshold: 0.110
   never_tune_on: test
 
 outputs:
